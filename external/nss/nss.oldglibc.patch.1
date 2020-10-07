@@ -1,0 +1,47 @@
+diff -ur nss.org/nss/lib/freebl/verified/kremlin/include/kremlin/lowstar_endianness.h nss/nss/lib/freebl/verified/kremlin/include/kremlin/lowstar_endianness.h
+--- nss.org/nss/lib/freebl/verified/kremlin/include/kremlin/lowstar_endianness.h	2020-10-07 16:00:10.454610384 +0200
++++ nss/nss/lib/freebl/verified/kremlin/include/kremlin/lowstar_endianness.h	2020-10-07 16:03:18.185698074 +0200
+@@ -198,6 +198,43 @@
+     memcpy(b, &i, 8);
+ }
+
++
++#if !defined(__bswap_constant_64)
++
++static __inline __uint64_t
++__uint64_identity (__uint64_t __x)
++{
++  return __x;
++}
++
++/* Swap bytes in 64-bit value.  */
++#define __bswap_constant_64(x)			\
++  ((((x) & 0xff00000000000000ull) >> 56)	\
++   | (((x) & 0x00ff000000000000ull) >> 40)	\
++   | (((x) & 0x0000ff0000000000ull) >> 24)	\
++   | (((x) & 0x000000ff00000000ull) >> 8)	\
++   | (((x) & 0x00000000ff000000ull) << 8)	\
++   | (((x) & 0x0000000000ff0000ull) << 24)	\
++   | (((x) & 0x000000000000ff00ull) << 40)	\
++   | (((x) & 0x00000000000000ffull) << 56))
++
++__extension__ static __inline __uint64_t
++__bswap_64 (__uint64_t __bsx)
++{
++#if __GNUC_PREREQ (4, 3)
++  return __builtin_bswap64 (__bsx);
++#else
++  return __bswap_constant_64 (__bsx);
++#endif
++}
++
++#  define htobe64(x) __bswap_64 (x)
++#  define htole64(x) __uint64_identity (x)
++#  define be64toh(x) __bswap_64 (x)
++#  define le64toh(x) __uint64_identity (x)
++
++#endif // glib version
++
+ /* Legacy accessors so that this header can serve as an implementation of
+  * C.Endianness */
+ #define load16_le(b) (le16toh(load16(b)))
